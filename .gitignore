@@ -1,0 +1,53 @@
+# Cache files
+*_cache/
+step_output.txt
+
+# Python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environments
+.venv/
+
+# Weights & Biases
+wandb/
+outputs/
+train/outputs/
+*/wandb/
+
+# Logs
+verl_demo.log
+*.log
+.git_status*.txt
+.git_diff_stat*.txt
+.ls_*.txt
+
+# Models and datasets
+artifacts/
+models/
+!verl/verl/models/
+saves/
+datasets/
+dataset/
+AgentItemId/
+parquet/
+
+# Generated datasets and results
+data_processing/dataset/
+data_processing/results/
+results.json
+rollout.jsonl
+
+# Train results
+checkpoints/
+outputs/
+
+# Temporary and output directories
+/handcrafted_conversations/
+
+# Environment variables (keep secrets out of git)
+.env
