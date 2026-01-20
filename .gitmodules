@@ -1,6 +1,6 @@
-[submodule "verl"]
+[submodule "train/verl"]
 	path = train/verl
 	url = https://github.com/volcengine/verl.git
-[submodule "affine-cortex"]
+[submodule "evaluate/affine-cortex"]
 	path = evaluate/affine-cortex
 	url = https://github.com/AffineFoundation/affine-cortex.git
