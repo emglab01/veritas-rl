@@ -67,6 +67,11 @@ python data_processing/generate_dataset.py \
   --concurrency 4
 ```
 
+> **Persistence behavior:** `generate_dataset.py` writes each sample to the JSONL file **immediately as it is generated** (line-by-line streaming).  
+> This means:
+> - If the process is interrupted (Ctrl+C, crash, timeout), all samples generated so far are already saved.
+> - You can safely inspect or resume from a **partially generated** file without losing work.
+
 ### Command-Line Options
 
 **Common Options:**
