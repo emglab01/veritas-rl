@@ -1,5 +1,5 @@
-export PYTHONPATH=/workspace/verl:
+export PYTHONPATH=/workspace/veritas-rl/train/verl:
 python -m verl.model_merger merge \
     --backend fsdp \
-    --local_dir artifacts/checkpoints/Qwen3-4B-nntoan-20251103_174435-batch_size-128_max_length-32768/global_step_100/ \
-    --target_dir merged_model
+    --local_dir train/artifacts/checkpoints/Qwen/Qwen3-4B-Instruct-2507-20260120_210611-batch_size-8_max_length-2048/global_step_5/ \
+    --target_dir train/merged_model

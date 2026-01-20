@@ -88,7 +88,7 @@ Training is handled by the VERL submodule with wrapper scripts. The project supp
 SFT training fine-tunes models on pre-generated datasets in parquet format. The training process:
 - Uses pre-generated parquet datasets (`train/parquet/train.parquet` and `val.parquet`)
 - Fine-tunes the Qwen3-4B-Instruct model on prompt-response pairs
-- Requires ≥2× A100 GPUs (160GB+)
+- Requires 1× H200 GPUs (140GB+)
 - Logs metrics to WandB and saves checkpoints automatically
 - Training scripts handle model downloading, configuration, and checkpoint management
 

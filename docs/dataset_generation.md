@@ -52,10 +52,10 @@ python data_processing/generate_dataset.py \
 python data_processing/generate_dataset.py \
   --env trace \
   --output data_processing/dataset/trace-random.jsonl \
-  --num-samples 1000 \
+  --num-samples 10 \
   --random-selection \
   --seed 42 \
-  --concurrency 4
+  --concurrency 8
 
 # Generate specific task types from LGC-V2 (random selection among specified types)
 python data_processing/generate_dataset.py \
@@ -157,8 +157,8 @@ The `add_reasoning.py` script:
 
 # Add reasoning to existing dataset
 python data_processing/add_reasoning.py \
-  --input data_processing/dataset/lgc-v2.jsonl \
-  --output data_processing/dataset/lgc-v2-with-reasoning.jsonl \
+  --input data_processing/dataset/trace-random.jsonl \
+  --output data_processing/dataset/trace-random-with-reasoning.jsonl \
   --model gpt-4o-mini \
   --max-retries 3 \
   --max-concurrent 5
@@ -257,7 +257,7 @@ python data_processing/evaluate_dataset.py \
 
 # Evaluate Trace dataset
 python data_processing/evaluate_dataset.py \
-  --input data_processing/dataset/trace-random.jsonl \
+  --input data_processing/dataset/trace-random-with-reasoning.jsonl \
   --env trace \
   --output data_processing/results/trace-eval.json
 
@@ -361,7 +361,7 @@ python data_processing/convert_to_parquet.py \
   --out-dir train/parquet \
   --env lgc-v2 \
   --format sft \
-  --val-ratio 0.1 \
+  --val-ratio 0.4 \
   --shuffle
 ```
 

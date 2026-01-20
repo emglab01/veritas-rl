@@ -46,10 +46,10 @@ hf download $pure_agent_model_name --local-dir $agent_model_path
 # Setting WANDB
 # ================================================
 task_name="lgc-v2"
-train_batch_size=32
+train_batch_size=8
 max_length=2048
-total_epoches=10
-gpu_count=2
+total_epoches=1
+gpu_count=1
 
 DATE=$(date +%Y%m%d)
 TIME=$(date +%Y%m%d_%H%M%S)
@@ -82,7 +82,7 @@ WANDB_MODE=online torchrun --nnodes=1 --nproc_per_node=${gpu_count} \
     data.train_batch_size=${train_batch_size} \
     data.prompt_key=prompt \
     data.response_key=response \
-    data.micro_batch_size_per_gpu=8 \
+    data.micro_batch_size_per_gpu=4 \
     data.max_length=${max_length} \
     model.fsdp_config.model_dtype=bf16 \
     model.partial_pretrain=${agent_model_path} \
@@ -96,5 +96,5 @@ WANDB_MODE=online torchrun --nnodes=1 --nproc_per_node=${gpu_count} \
     trainer.experiment_name=${WANDB_EXP} \
     trainer.logger='["console","wandb"]' \
     trainer.total_epochs=${total_epoches} \
-    trainer.save_freq=50 \
-    trainer.test_freq=50
+    trainer.save_freq=5 \
+    trainer.test_freq=5

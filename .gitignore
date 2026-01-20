@@ -45,6 +45,7 @@ rollout.jsonl
 # Train results
 checkpoints/
 outputs/
+merged_model/
 
 # Temporary and output directories
 /handcrafted_conversations/
