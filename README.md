@@ -14,21 +14,9 @@ This repo is a lightweight, practical wrapper around the [`train/verl/`](./train
 ### 1. Clone (with submodules, VERL v0.5.x)
 
 ```bash
-git clone --recurse-submodules git@github.com:<Repo>
+git clone https://github.com/emglab01/veritas-rl.git
 cd veritas-rl
-
-# (Recommended) Make sure VERL submodule is on the v0.5.x release line
-cd train/verl
-git checkout v0.5.x
-cd ../..
-```
-
-If you already cloned without submodules:
-
-```bash
 git submodule update --init --recursive
-cd train/verl && git checkout v0.5.x && cd ../..
-```
 
 ### 2. Set Up Python Environment
 
@@ -41,6 +29,8 @@ cd train/verl && git checkout v0.5.x && cd ../..
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Setup
+chmod +x ./setup_uv.sh
+
 ./setup_uv.sh
 
 # Configure environment

@@ -97,4 +97,4 @@ WANDB_MODE=online torchrun --nnodes=1 --nproc_per_node=${gpu_count} \
     trainer.logger='["console","wandb"]' \
     trainer.total_epochs=${total_epoches} \
     trainer.save_freq=50 \
-    trainer.test_freq=50 \
+    trainer.test_freq=50

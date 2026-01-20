@@ -149,8 +149,6 @@ The `add_reasoning.py` script:
 ### Basic Usage
 
 ```bash
-# Set OpenAI API key
-export OPENAI_API_KEY=your_key_here
 
 # Add reasoning to existing dataset
 python data_processing/add_reasoning.py \
@@ -424,7 +422,7 @@ python data_processing/generate_dataset.py \
   --concurrency 4
 
 # 2. Add reasoning to dataset (optional)
-export OPENAI_API_KEY=your_key_here
+
 python data_processing/add_reasoning.py \
   --input data_processing/dataset/lgc-v2.jsonl \
   --output data_processing/dataset/lgc-v2-with-reasoning.jsonl \

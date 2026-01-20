@@ -16,6 +16,9 @@ project-specific wrappers and scripts.
 ---
 
 ### SFT (parquet-based, Qwen3‑4B‑Instruct)
+```bash
+. train/scripts/lgc-v2-SFT-trainer.sh
+```
 
 The recommended way to run SFT is via the helper script:
 
@@ -88,6 +91,10 @@ like `train/parquet_sft/` and edit `dataset_path` in `lgc-v2-SFT-trainer.sh` and
 ---
 
 ### GRPO (RL) with verifiable reward (dynamic env dataset)
+
+```bash
+. train/scripts/lgc-v2-GRPO-trainer.sh
+```
 
 For RL with GRPO and verifiable rewards, use:
 
