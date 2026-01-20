@@ -17,6 +17,7 @@ This repo is a lightweight, practical wrapper around the [`train/verl/`](./train
 git clone https://github.com/emglab01/veritas-rl.git
 cd veritas-rl
 git submodule update --init --recursive
+```
 
 ### 2. Set Up Python Environment
 
