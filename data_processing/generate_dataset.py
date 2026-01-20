@@ -637,6 +637,7 @@ async def main() -> None:
             async for sample in _generate_samples(config):
                 try:
                     f.write(json.dumps(sample, ensure_ascii=False) + "\n")
+                    f.flush()
                     samples_generated += 1
                     if samples_generated % PROGRESS_INTERVAL == 0:
                         print(
