@@ -4,3 +4,6 @@
 [submodule "evaluate/affine-cortex"]
 	path = evaluate/affine-cortex
 	url = https://github.com/AffineFoundation/affine-cortex.git
+[submodule "affinetes"]
+	path = affinetes
+	url = https://github.com/AffineFoundation/affinetes.git

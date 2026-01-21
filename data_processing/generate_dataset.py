@@ -41,7 +41,6 @@ from validation import (
 )
 
 # Constants
-TRACE_DATASET_SIZE = 23303
 MAX_RETRIES = 5
 PROGRESS_INTERVAL = 100
 DEFAULT_CONCURRENCY = 4  # Default number of concurrent generations
@@ -426,37 +425,46 @@ async def generate_trace_samples(
     start_task_id: int = 0,
     random_selection: bool = False,
     seed: Optional[int] = None,
-    concurrency: int = DEFAULT_CONCURRENCY
+    concurrency: int = DEFAULT_CONCURRENCY,
 ) -> AsyncIterator[Dict[str, Any]]:
     """
     Generate Trace samples with problems and answers.
+    
+    The underlying affinetes TraceTask wraps a HuggingFace dataset. Instead of
+    relying on a hard-coded TRACE_DATASET_SIZE constant, we derive the dataset
+    length directly from the adapter task. This keeps the generator correct even
+    if the dataset, split, or configuration changes.
     
     Args:
         adapter: Trace adapter instance
         num_samples: Number of samples to generate
         start_task_id: Starting task_id (for deterministic generation)
-        random_selection: If True, randomly select task_ids within valid range (0-23302)
+        random_selection: If True, randomly select task_ids within the valid range
         seed: Random seed for random selection (only used if random_selection=True)
+        concurrency: Maximum number of concurrent generations
     
     Yields:
         dict: Sample with prompt and ground truth (answer)
     """
-    MAX_TASK_ID = TRACE_DATASET_SIZE - 1  # 0-23302
+    # Get dataset size from the underlying TraceTask
+    dataset = adapter._task.dataset  # type: ignore[attr-defined]
+    dataset_size = len(dataset)
+    max_task_id = dataset_size - 1
     
     # Warn if generating more samples than available unique items
-    if num_samples > TRACE_DATASET_SIZE and not random_selection:
+    if num_samples > dataset_size and not random_selection:
         print(
             f"Warning: Generating {num_samples} samples but dataset only has "
-            f"{TRACE_DATASET_SIZE} unique items.",
-            file=sys.stderr
+            f"{dataset_size} unique items.",
+            file=sys.stderr,
         )
         print(
-            f"  Samples will wrap around (task_id % {TRACE_DATASET_SIZE}).",
-            file=sys.stderr
+            f"  Samples will wrap around (task_id % {dataset_size}).",
+            file=sys.stderr,
         )
         print(
             "  Consider using --random-selection to randomly sample from all available items.",
-            file=sys.stderr
+            file=sys.stderr,
         )
     
     # Initialize random number generator if needed
@@ -471,10 +479,11 @@ async def generate_trace_samples(
     tasks = []
     for i in range(num_samples):
         if random_selection:
-            task_id = rng.randint(0, MAX_TASK_ID)  # type: ignore
+            assert rng is not None  # for type checkers
+            task_id = rng.randint(0, max_task_id)
         else:
             # Sequential generation (wraps around if exceeds dataset size)
-            task_id = (start_task_id + i) % TRACE_DATASET_SIZE
+            task_id = (start_task_id + i) % dataset_size
         
         coro = _generate_single_trace_sample(adapter, task_id, semaphore)
         # Create task to start execution immediately
@@ -504,7 +513,7 @@ async def _generate_samples(config: GenerationConfig) -> AsyncIterator[Dict[str,
             config.start_task_id,
             config.random_selection,
             config.seed,
-            config.concurrency
+            config.concurrency,
         ):
             yield sample
     else:
@@ -556,8 +565,11 @@ async def main() -> None:
     parser.add_argument(
         "--random-selection",
         action="store_true",
-        help="For Trace env: randomly select task_ids from valid range (0-23302) "
-             "instead of sequential"
+        help=(
+            "For Trace env: randomly select task_ids from the full logical ID range "
+            "[0, 1,000,000,000) instead of sequential; underlying dataset index is "
+            "task_id % len(dataset) (matches PRINT dataset_range in affine config)."
+        ),
     )
     parser.add_argument(
         "--adapter-config",
@@ -618,13 +630,13 @@ async def main() -> None:
     elif config.env == "trace":
         if config.random_selection:
             print(
-                f"  Using random selection from dataset "
-                f"(range: 0-{TRACE_DATASET_SIZE - 1}, seed={config.seed})"
+                "  Using random selection from dataset (range determined by adapter dataset size, "
+                f"seed={config.seed})"
             )
         else:
             print(
                 f"  Using sequential task_ids starting from {config.start_task_id} "
-                f"(wraps around at {TRACE_DATASET_SIZE})"
+                "(wraps around at dataset_size derived from adapter)"
             )
     
     # Generate and write samples

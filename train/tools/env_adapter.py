@@ -26,25 +26,50 @@ def _project_root() -> Path:
 
 def _add_env_to_syspath(env_dirname: str) -> Path:
     """
-    Add /repo/environments/<env_dirname> to sys.path for local imports.
+    Add the environment implementation directory to sys.path for local imports.
 
-    Note: some env directories include hyphens (e.g. lgc-v2), which is why we
-    use sys.path insertion rather than package imports.
+    Historically, environments lived under:
+        /repo/environments/<env_dirname>
+
+    After integrating `affinetes`, they now live under:
+        /repo/affinetes/environments/primeintellect/lgc-v2
+        /repo/affinetes/environments/trace
+
+    This helper transparently supports both layouts so callers can keep using
+    `_add_env_to_syspath("lgc-v2")` or `"trace"` without caring about the
+    underlying directory structure.
     """
-    env_path = _project_root() / "environments" / env_dirname
+    project_root = _project_root()
+
+    # 1) Original layout: /environments/<env_dirname>
+    legacy_path = project_root / "environments" / env_dirname
+    if legacy_path.exists():
+        env_path = legacy_path
+    else:
+        # 2) New Affinetes layout
+        affinetes_root = project_root / "affinetes" / "environments"
+
+        # Special-case mappings for known envs
+        if env_dirname in {"lgc-v2", "lgc_v2", "logic-v2", "logic_v2"}:
+            env_path = affinetes_root / "primeintellect" / "lgc-v2"
+        elif env_dirname == "trace":
+            env_path = affinetes_root / "trace"
+        else:
+            # Fallback: direct match under affinetes/environments/<env_dirname>
+            env_path = affinetes_root / env_dirname
+
     if not env_path.exists():
         raise FileNotFoundError(f"Environment path not found: {env_path}")
+
     if str(env_path) not in sys.path:
         sys.path.insert(0, str(env_path))
+
     return env_path
 
 
 @dataclass(frozen=True)
 class SimpleChallenge:
-    """
-    Minimal challenge container (prompt + extra metadata) that is JSON-serializable.
-    """
-
+    """Minimal challenge container (prompt + extra metadata) that is JSON-serializable."""
     env: str
     prompt: str
     extra: Dict[str, Any]
@@ -55,15 +80,11 @@ class EnvAdapter(Protocol):
     Adapter surface that works for single-turn verifiable tasks:
     - generate(): produces a prompt + metadata (challenge)
     - evaluate(): scores a model response against that challenge
-
-    Note: Interactive multi-turn envs (e.g., OpenSpiel gameplay) are intentionally
-    not supported by this single-turn adapter API.
     """
 
     env_name: str
 
     def generate(self, task_id: int) -> SimpleChallenge: ...
-
     def evaluate(self, solution_str: str, challenge: SimpleChallenge) -> float: ...
 
 
@@ -108,7 +129,11 @@ class TraceAdapter:
         _add_env_to_syspath("trace")
         from trace_task import TraceTask  # type: ignore
 
-        self._task = TraceTask(dataset_name=dataset_name, dataset_split=dataset_split, dataset_shuffle=dataset_shuffle)
+        self._task = TraceTask(
+            dataset_name=dataset_name,
+            dataset_split=dataset_split,
+            dataset_shuffle=dataset_shuffle,
+        )
 
     def generate(self, task_id: int) -> SimpleChallenge:
         import asyncio
@@ -150,5 +175,3 @@ def get_env_adapter(env: str, config: Optional[Dict[str, Any]] = None) -> EnvAda
         )
 
     raise ValueError(f"Unknown env adapter: {env}")
-
-
