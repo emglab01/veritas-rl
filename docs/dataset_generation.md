@@ -25,6 +25,13 @@ Both **LGC-V2** and **Trace** environments can generate datasets with **problems
   - Sequential: Wraps around at 23303
   - Random: Randomly selects from 0-23302 (use `--random-selection` flag)
 
+> **Implementation note (updated):** In the current code, Trace uses a **logical task_id range**
+> of `[0, 1,000,000,000)` (PRINT range from the Affine config at
+> [`https://api.affine.io/api/v1/config/environments`](https://api.affine.io/api/v1/config/environments)).
+> Any logical `task_id` is mapped to the underlying HuggingFace dataset via
+> `task_id % len(dataset)`, so the effective dataset index always stays within
+> `[0, len(dataset) - 1]` while still supporting a large logical ID space.
+
 ## 1. Generating Datasets
 
 A script is provided at `data_processing/generate_dataset.py` to generate datasets:
@@ -93,6 +100,12 @@ python data_processing/generate_dataset.py \
   - Trace dataset has 23,303 items (indices 0-23302)
   - Without this flag: sequential generation wraps around at 23303
   - With this flag: each sample randomly picks from 0-23302
+
+> **Updated behavior:** The generator now derives the dataset size dynamically from the
+> underlying `TraceTask` and uses a logical PRINT range `[0, 1e9)` for `task_id`. In practice:
+> - Sequential mode uses `(start_task_id + i) % len(dataset)` for each sample.
+> - Random mode samples logical ids uniformly (as if from `[0, 1e9)`) and then maps each to
+>   an index via `task_id % len(dataset)`.
 
 ### Output Format
 
@@ -343,9 +356,10 @@ python data_processing/evaluate_dataset.py \
    - For reasoning-enhanced datasets, ensure the final answer is correctly formatted after the separator
 
 3. **Trace Dataset Index Errors**:
-   - Ensure task_ids are within 0-23302 range
-   - Use `--random-selection` for random sampling
-   - Sequential mode automatically wraps around at 23303
+   - Logical task_ids live in a large PRINT range; the implementation always maps to a valid
+     dataset index using `task_id % len(dataset)`
+   - Use `--random-selection` for random sampling over the logical range
+   - Sequential mode automatically wraps around via modulo indexing
 
 ## 4. Converting to VERL Format
 
@@ -553,11 +567,13 @@ asyncio.run(generate_samples())
 1. **Task Type Selection**:
    - **LGC-V2**: When `--task-types` is not specified, **randomly selects** from all 7 task types for each sample
    - **LGC-V2**: When `--task-types` is specified, randomly selects among those types
-   - **Trace**: Use `--random-selection` to randomly sample from dataset (0-23302)
+   - **Trace**: Use `--random-selection` to randomly sample over the logical PRINT id space,
+     which is then mapped to concrete dataset indices via modulo
 
 2. **Deterministic Generation**: Both environments use `task_id` for deterministic generation
-   - LGC-V2: `task_id = task_type_id * 100M + seed`
-   - Trace: `task_id` maps to dataset index (0-23302)
+   - LGC-V2: `task_id = task_type_id * 100M + seed` (overall `[0, 899,999,999]` across all task types)
+   - Trace: logical `task_id` is in a large PRINT range and the effective index is
+     always `task_id % len(dataset)`
 
 3. **Answer Availability**: 
    - ✅ LGC-V2: Answers are in `game_data.answer`
@@ -566,9 +582,9 @@ asyncio.run(generate_samples())
 4. **Reproducibility**: Same `task_id` + same `seed` → same problem + answer
 
 5. **Scalability**: 
-   - LGC-V2: 100M unique tasks per task type (7 task types = 700M+ total)
-   - Trace: 23,303 unique items (indices 0-23302)
-   - Trace sequential mode wraps around if generating more than 23,303 samples
+   - LGC-V2: 100M unique tasks per task type (7 task types + reasoning-errors = 800M total logical ids)
+   - Trace: 23,303 unique underlying items, but a large logical PRINT id space that is mapped via modulo
+   - Trace sequential mode wraps around automatically using modulo indexing
 
 6. **Error Handling and Retry Logic**:
    - The generator includes automatic retry logic for failed generations
